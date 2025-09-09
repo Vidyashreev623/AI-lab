@@ -58,7 +58,7 @@ def hill_climbing(initial_state, goal_state, max_iterations=1000):
     current = initial_state
     current_h = manhattan_distance(current, goal_state)
     steps = 0
-    path = []  # To keep track of moves
+    path = []  
    
     print(f"Step {steps}: (Manhattan Distance: {current_h})")
     print_state(current)
@@ -74,7 +74,7 @@ def hill_climbing(initial_state, goal_state, max_iterations=1000):
             return current, current_h, steps, path
        
         current, current_h = best_state, best_h
-        path.append(best_move)  # Record the move made
+        path.append(best_move)  
         steps += 1
        
         print(f"Step {steps}: Move: {best_move} (Manhattan Distance: {current_h})")
@@ -106,5 +106,20 @@ if __name__ == "__main__":
     print("\nPath of moves:")
     if path:
         print(" -> ".join(path))
+    else:
+        print("No moves made.")
+   
+    # Summary output of start, goal, and path
+    print("\nSummary:")
+    print("Start State:")
+    print_state(initial_state)
+   
+    print("Goal State:")
+    print_state(goal_state)
+   
+    # Print moves in the requested format
+    if path:
+        print("Final Path of moves:")
+        print("Start -> " + " -> ".join(path) + " -> Goal")
     else:
         print("No moves made.")
