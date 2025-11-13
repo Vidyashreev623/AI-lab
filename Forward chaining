@@ -1,0 +1,110 @@
+def unify_and_substitute(premise_tuple, facts, rule_conclusion, target_var_map=None):
+    current_subst = {}
+   
+    for premise in premise_tuple:
+        found_match = False
+       
+        pred_name, args = premise.split('(')[0], premise.split('(')[1].replace(')', '').split(', ')
+
+        for fact in facts:
+            fact_name, fact_args = fact.split('(')[0], fact.split('(')[1].replace(')', '').split(', ')
+           
+            if pred_name == fact_name and len(args) == len(fact_args):
+                temp_subst = current_subst.copy()
+                is_consistent = True
+               
+                for i in range(len(args)):
+                    var = args[i]
+                    const = fact_args[i]
+                   
+                    if var in temp_subst:
+                        if temp_subst[var] != const:
+                            is_consistent = False
+                            break
+                    else:
+                        temp_subst[var] = const
+               
+                if is_consistent:
+                    current_subst = temp_subst
+                    found_match = True
+                    break
+       
+        if not found_match:
+            return None
+
+    if current_subst:
+        conclusion_pred, conclusion_args = rule_conclusion.split('(')[0], rule_conclusion.split('(')[1].replace(')', '').split(', ')
+       
+        final_args = [current_subst.get(arg, arg) for arg in conclusion_args]
+        inferred_fact = f"{conclusion_pred}({', '.join(final_args)})"
+       
+        return inferred_fact
+       
+    return None
+
+
+def forward_chaining(facts, rule, query):
+    derived = set(facts)
+    premises, conclusion = rule
+   
+    print("\n--- Starting Forward Chaining ---")
+
+    while True:
+        new_inference = False
+        inferred = unify_and_substitute(premises, derived, conclusion, {})
+
+        if inferred and inferred not in derived:
+            print(f"Applying Rule: {' ^ '.join(premises)} => {conclusion}")
+            print(f"Inferred: {inferred}")
+            derived.add(inferred)
+            new_inference = True
+
+            if inferred == query:
+                return True, derived
+
+        if not new_inference:
+            break
+
+    return (query in derived), derived
+
+
+facts = {
+    "Teacher(Ananya)",
+    "Teaches(Ananya, Math)",
+    "SubjectOf(Math, ScienceDept)"
+}
+
+rule_premises = [
+    "Teacher(x)",
+    "Teaches(x, y)",
+    "SubjectOf(y, z)"
+]
+rule_conclusion = "WorksInDepartment(x, z)"
+
+rule = (rule_premises, rule_conclusion)
+
+query = "WorksInDepartment(Ananya, ScienceDept)"
+
+result, derived_facts = forward_chaining(facts, rule, query)
+
+print("\n--- Final Facts Derived ---")
+for f in derived_facts:
+    print(f)
+
+print("\nQuery:", query)
+print("Result:", "TRUE  (Fact Proven)" if result else "FALSE  (Not Provable)")
+
+output:
+--- Starting Forward Chaining ---
+Applying Rule: Teacher(x) ^ Teaches(x, y) ^ SubjectOf(y, z) => WorksInDepartment(x, z)
+Inferred: WorksInDepartment(Ananya, ScienceDept)
+
+--- Final Facts Derived ---
+SubjectOf(Math, ScienceDept)
+WorksInDepartment(Ananya, ScienceDept)
+Teaches(Ananya, Math)
+Teacher(Ananya)
+
+Query: WorksInDepartment(Ananya, ScienceDept)
+Result: TRUE  (Fact Proven)
+
