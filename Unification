@@ -1,0 +1,72 @@
+def unify_and_substitute(premise_tuple, facts, rule_conclusion, target_var_map=None):
+    current_subst = {}
+   
+    for premise in premise_tuple:
+        found_match = False
+       
+        # Split predicate name and arguments
+        pred_name, args = premise.split('(')[0], premise.split('(')[1].replace(')', '').split(', ')
+       
+        for fact in facts:
+            fact_name, fact_args = fact.split('(')[0], fact.split('(')[1].replace(')', '').split(', ')
+           
+            # Predicate names and arity must match
+            if pred_name == fact_name and len(args) == len(fact_args):
+                temp_subst = current_subst.copy()
+                is_consistent = True
+               
+                # Try to unify each argument
+                for i in range(len(args)):
+                    var = args[i]
+                    const = fact_args[i]
+                   
+                    if var in temp_subst:
+                        if temp_subst[var] != const:
+                            is_consistent = False
+                            break
+                    else:
+                        temp_subst[var] = const
+               
+                # If consistent, update and move on
+                if is_consistent:
+                    current_subst = temp_subst
+                    found_match = True
+                    break
+       
+        if not found_match:
+            return None  # No matching fact for this premise
+
+    # Apply substitution to rule conclusion
+    if current_subst:
+        conclusion_pred, conclusion_args = rule_conclusion.split('(')[0], rule_conclusion.split('(')[1].replace(')', '').split(', ')
+       
+        final_args = [current_subst.get(arg, arg) for arg in conclusion_args]
+        inferred_fact = f"{conclusion_pred}({', '.join(final_args)})"
+       
+        return inferred_fact
+       
+    return None
+
+
+premises1 = ("WorksFor(x, y)", "Manager(y, z)")
+facts1 = ["WorksFor(Alice, HR)", "Manager(HR, Robert)"]
+conclusion1 = "ReportsTo(x, z)"
+
+result1 = unify_and_substitute(premises1, facts1, conclusion1, {})
+print("Inferred fact (Example 1):", result1)
+
+
+
+premises2 = ("Studies(x, y)", "Teaches(z, y)", "WorksAt(z, w)")
+facts2 = ["Studies(John, AI)", "Teaches(ProfK, AI)", "WorksAt(ProfK, University)"]
+conclusion2 = "LearnsFromAt(x, z, w)"
+
+result2 = unify_and_substitute(premises2, facts2, conclusion2, {})
+print("Inferred fact (Example 2):", result2)
+
+
+
+output:
+Inferred fact (Example 1): ReportsTo(Alice, Robert)
+Inferred fact (Example 2): LearnsFromAt(John, ProfK, University)
+
